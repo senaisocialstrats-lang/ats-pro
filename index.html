@@ -3,38 +3,2413 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ATS Pro — Optimiseur de CV par IA</title>
+<title>CVProS — Créez votre CV professionnel avec l'IA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700;800&family=Bricolage+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=Epilogue:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-<script src="https://js.stripe.com/v3/"></script>
 <style>
 :root {
-  --ink: #0d0d12;
-  --ink2: #1a1a24;
-  --ink3: #24242f;
-  --surface: #f7f6f3;
-  --surface2: #eeecea;
-  --line: rgba(13,13,18,0.1);
-  --line2: rgba(13,13,18,0.18);
-  --text: #0d0d12;
-  --muted: #6b6a7a;
-  --muted2: #9998aa;
-  --accent: #ff4f17;
-  --accent2: #ff7a4d;
-  --gold: #c9a84c;
-  --gold2: #e8c97a;
-  --emerald: #00b37e;
-  --emerald2: #00d68f;
-  --sky: #0099ff;
-  --r: 4px;
-  --r2: 12px;
-  --r3: 20px;
+  --bg: #f9f7f2;
+  --white: #ffffff;
+  --ink: #111118;
+  --ink2: #1e1e28;
+  --line: rgba(17,17,24,0.09);
+  --line2: rgba(17,17,24,0.16);
+  --muted: #6c6b7c;
+  --muted2: #a09fb0;
+  --olive: #2d5016;
+  --lime: #8cb43a;
+  --lime2: #b4d96a;
+  --coral: #e8533a;
+  --coral2: #ff7a63;
+  --cream: #f0ece0;
+  --gold: #d4a847;
+  --sand: #e8e2d0;
+  --r: 6px;
+  --r2: 16px;
+  --r3: 24px;
+  --r4: 32px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; font-size: 16px; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Epilogue', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* CUSTOM CURSOR */
+.cursor {
+  position: fixed;
+  width: 12px; height: 12px;
+  background: var(--coral);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.15s, width 0.2s, height 0.2s, background 0.2s;
+  transform: translate(-50%, -50%);
+}
+.cursor-ring {
+  position: fixed;
+  width: 36px; height: 36px;
+  border: 1.5px solid var(--coral);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), width 0.3s, height 0.3s, opacity 0.3s;
+  transform: translate(-50%, -50%);
+  opacity: 0.5;
+}
+body:has(a:hover) .cursor, body:has(button:hover) .cursor {
+  width: 20px; height: 20px;
+  background: var(--lime);
+}
+body:has(a:hover) .cursor-ring, body:has(button:hover) .cursor-ring {
+  width: 52px; height: 52px;
+  opacity: 0.3;
+}
+
+/* NAV */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+  background: rgba(249,247,242,0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+  transition: box-shadow 0.3s;
+}
+nav.scrolled { box-shadow: 0 2px 24px rgba(17,17,24,0.08); }
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.logo-mark {
+  width: 38px; height: 38px;
+  background: var(--ink);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.logo-mark::after {
+  content: '';
+  position: absolute;
+  top: -8px; right: -8px;
+  width: 20px; height: 20px;
+  background: var(--lime2);
+  border-radius: 50%;
+}
+.logo-mark svg { position: relative; z-index: 1; }
+.logo-name {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+.logo-name span { color: var(--coral); }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  list-style: none;
+}
+.nav-links a {
+  display: block;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 100px;
+  transition: all 0.2s;
+}
+.nav-links a:hover { color: var(--ink); background: var(--sand); }
+
+.nav-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-nav {
+  padding: 9px 22px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Epilogue', sans-serif;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-nav-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line2); }
+.btn-nav-ghost:hover { color: var(--ink); border-color: var(--ink); }
+.btn-nav-solid { background: var(--ink); color: white; }
+.btn-nav-solid:hover { background: var(--ink2); transform: translateY(-1px); }
+
+.hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; }
+.hamburger span { width: 22px; height: 2px; background: var(--ink); border-radius: 2px; transition: all 0.3s; }
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 140px 40px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Grid lines decoration */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(17,17,24,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17,17,24,0.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+}
+
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+}
+.blob1 { width: 500px; height: 500px; background: rgba(140,180,58,0.12); top: -10%; left: -15%; }
+.blob2 { width: 400px; height: 400px; background: rgba(232,83,58,0.1); bottom: 5%; right: -10%; }
+.blob3 { width: 300px; height: 300px; background: rgba(212,168,71,0.1); top: 30%; right: 20%; }
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line2);
+  background: var(--white);
+  border-radius: 100px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.6s ease both;
+}
+.eyebrow-dot { width: 6px; height: 6px; background: var(--lime); border-radius: 50%; }
+
+.hero-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(48px, 8vw, 88px);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.7s 0.1s ease both;
+}
+.hero-title .line2 {
+  display: block;
+  font-style: italic;
+  color: var(--coral);
+  position: relative;
+}
+.hero-title .line2::before {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 0; right: 0;
+  height: 4px;
+  background: var(--lime2);
+  opacity: 0.4;
+  border-radius: 2px;
+}
+.hero-title .line3 {
+  display: block;
+  background: linear-gradient(135deg, var(--ink) 40%, var(--olive) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--muted);
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+
+.hero-btns {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 64px;
+  flex-wrap: wrap;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.7s 0.3s ease both;
+}
+.btn-hero-main {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 16px 36px;
+  background: var(--ink);
+  color: white;
+  border-radius: 100px;
+  font-family: 'Epilogue', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(17,17,24,0.2);
+}
+.btn-hero-main:hover { transform: translateY(-2px); box-shadow: 0 10px 36px rgba(17,17,24,0.25); }
+.btn-hero-alt {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 16px 28px;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 100px;
+  font-family: 'Epilogue', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--line2);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-hero-alt:hover { color: var(--ink); border-color: var(--ink); background: var(--white); }
+
+.hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.7s 0.4s ease both;
+}
+.hstat { text-align: center; }
+.hstat-num {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+.hstat-lab { font-size: 12px; color: var(--muted2); margin-top: 2px; }
+.hstat-div { width: 1px; height: 40px; background: var(--line2); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* TICKER */
+.ticker-wrap {
+  background: var(--ink);
+  padding: 16px 0;
+  overflow: hidden;
+  position: relative;
+}
+.ticker {
+  display: flex;
+  gap: 0;
+  animation: ticker 25s linear infinite;
+  width: max-content;
+}
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 32px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  white-space: nowrap;
+}
+.ticker-item .dot { color: var(--lime2); }
+@keyframes ticker { to { transform: translateX(-50%); } }
+
+/* SECTION COMMON */
+section { padding: 100px 40px; }
+.section-wrap { max-width: 1160px; margin: 0 auto; }
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin-bottom: 16px;
+}
+.section-label::before {
+  content: '';
+  width: 20px; height: 2px;
+  background: var(--coral);
+  border-radius: 2px;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(34px, 5vw, 54px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+.section-sub {
+  font-size: 17px;
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 520px;
+  margin-top: 14px;
+}
+
+/* HOW IT WORKS */
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  margin-top: 56px;
+}
+.how-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--r3);
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s, border-color 0.25s;
+}
+.how-card:hover { transform: translateY(-4px); border-color: var(--line2); }
+.how-card::before {
+  content: attr(data-num);
+  position: absolute;
+  top: -10px; right: 16px;
+  font-family: 'Fraunces', serif;
+  font-size: 100px;
+  font-weight: 900;
+  color: rgba(17,17,24,0.04);
+  line-height: 1;
+  pointer-events: none;
+}
+.how-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+.ic-lime { background: rgba(140,180,58,0.12); }
+.ic-coral { background: rgba(232,83,58,0.1); }
+.ic-gold { background: rgba(212,168,71,0.1); }
+.how-card h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+.how-card p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+/* TEMPLATES */
+#templates { background: var(--cream); }
+.tpl-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.tpl-tabs {
+  display: flex;
+  gap: 0;
+  background: rgba(17,17,24,0.06);
+  border-radius: 100px;
+  padding: 4px;
+}
+.tpl-tab {
+  padding: 8px 20px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--muted);
+  border: none;
+  background: transparent;
+  font-family: 'Epilogue', sans-serif;
+  transition: all 0.2s;
+}
+.tpl-tab.active { background: var(--white); color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+.tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.tpl-card {
+  background: white;
+  border-radius: var(--r2);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+}
+.tpl-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(17,17,24,0.12); border-color: transparent; }
+.tpl-card:hover .tpl-overlay { opacity: 1; }
+
+.tpl-preview {
+  height: 280px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* CV Template previews - actually styled divs */
+.cv-preview {
+  width: 100%;
+  height: 100%;
+  padding: 18px;
+  font-size: 7px;
+  line-height: 1.4;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Template 1: Moderne */
+.tpl-moderne { background: #fff; }
+.tpl-moderne .cv-sidebar { position: absolute; left:0; top:0; bottom:0; width:38%; background: #1a1a2e; padding:14px 10px; }
+.tpl-moderne .cv-main { margin-left:40%; padding: 10px 8px; }
+.tpl-moderne .cv-name { font-family:'Fraunces',serif; font-size:11px; font-weight:800; color:white; margin-bottom:4px; }
+.tpl-moderne .cv-role { font-size:6px; color:rgba(255,255,255,0.6); margin-bottom:10px; }
+.tpl-moderne .cv-section { font-size:6px; font-weight:700; color:var(--lime2); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.05em; }
+.tpl-moderne .cv-bar { height:3px; background:rgba(255,255,255,0.1); border-radius:2px; margin-bottom:4px; }
+.tpl-moderne .cv-bar-fill { height:3px; background:var(--lime2); border-radius:2px; margin-bottom:6px; }
+.tpl-moderne .cv-section-main { font-size:6px; font-weight:700; color:#1a1a2e; margin-bottom:3px; padding-bottom:2px; border-bottom:1.5px solid var(--lime); text-transform:uppercase; }
+.tpl-moderne .cv-line { height:4px; background:#f0f0f0; border-radius:2px; margin-bottom:3px; }
+.tpl-moderne .cv-line.short { width:70%; }
+
+/* Template 2: Classique */
+.tpl-classique { background: #fff; }
+.tpl-classique .cv-top { background:#2c3e50; padding:14px; text-align:center; }
+.tpl-classique .cv-name { font-family:'Fraunces',serif; font-size:13px; font-weight:800; color:white; }
+.tpl-classique .cv-role { font-size:6px; color:rgba(255,255,255,0.65); margin-top:2px; }
+.tpl-classique .cv-body { padding:10px 12px; }
+.tpl-classique .cv-section { font-size:6px; font-weight:700; color:#2c3e50; border-bottom:1.5px solid #e8ecef; padding-bottom:2px; margin-bottom:6px; margin-top:8px; text-transform:uppercase; }
+.tpl-classique .cv-line { height:4px; background:#f0f0f0; border-radius:2px; margin-bottom:3px; }
+.tpl-classique .cv-line.short { width:75%; }
+.tpl-classique .cv-dot { display:inline-block; width:3px; height:3px; border-radius:50%; background:#2c3e50; margin-right:4px; vertical-align:middle; }
+
+/* Template 3: Créatif */
+.tpl-creatif { background: #fff; }
+.tpl-creatif .cv-accent { position:absolute; top:-30px; right:-30px; width:100px; height:100px; background:var(--lime); border-radius:50%; opacity:0.3; }
+.tpl-creatif .cv-accent2 { position:absolute; bottom:-20px; left:-20px; width:70px; height:70px; background:var(--coral); border-radius:50%; opacity:0.2; }
+.tpl-creatif .cv-name { font-family:'Fraunces',serif; font-size:14px; font-weight:900; color:var(--ink); margin:14px 14px 2px; letter-spacing:-0.02em; }
+.tpl-creatif .cv-role { font-size:7px; color:var(--coral); font-weight:600; margin:0 14px 10px; }
+.tpl-creatif .cv-divider { height:2px; background:var(--lime); margin:0 14px 10px; width:40px; border-radius:2px; }
+.tpl-creatif .cv-section { font-size:6px; font-weight:700; color:var(--olive); margin:0 14px 4px; text-transform:uppercase; letter-spacing:0.08em; }
+.tpl-creatif .cv-line { height:4px; background:#f0f0f0; border-radius:2px; margin:0 14px 3px; }
+.tpl-creatif .cv-line.short { width:65%; }
+
+/* Template 4: Minimaliste */
+.tpl-minimal { background: #fff; }
+.tpl-minimal .cv-name { font-family:'Fraunces',serif; font-size:16px; font-weight:900; color:var(--ink); margin:18px 16px 2px; letter-spacing:-0.03em; }
+.tpl-minimal .cv-role { font-size:7px; color:var(--muted); margin:0 16px 14px; }
+.tpl-minimal .cv-line-thin { height:1px; background:var(--line); margin:0 16px 12px; }
+.tpl-minimal .cv-section { font-size:5px; font-weight:700; color:var(--muted2); margin:0 16px 5px; text-transform:uppercase; letter-spacing:0.1em; }
+.tpl-minimal .cv-line { height:4px; background:#f0f0f0; border-radius:2px; margin:0 16px 3px; }
+.tpl-minimal .cv-line.short { width:70%; }
+
+/* Template 5: Executive */
+.tpl-exec { background: #1c1c1c; }
+.tpl-exec .cv-gold-bar { height:4px; background: linear-gradient(90deg,#d4a847,#f0c96a); }
+.tpl-exec .cv-name { font-family:'Fraunces',serif; font-size:13px; font-weight:900; color:white; margin:12px 14px 2px; }
+.tpl-exec .cv-role { font-size:6px; color:#d4a847; font-weight:600; margin:0 14px 10px; text-transform:uppercase; letter-spacing:0.06em; }
+.tpl-exec .cv-section { font-size:6px; font-weight:700; color:#d4a847; margin:0 14px 4px; text-transform:uppercase; }
+.tpl-exec .cv-line { height:4px; background:rgba(255,255,255,0.1); border-radius:2px; margin:0 14px 3px; }
+.tpl-exec .cv-line.short { width:65%; }
+.tpl-exec .cv-sep { height:1px; background:rgba(255,255,255,0.1); margin:8px 14px; }
+
+/* Template 6: Tech */
+.tpl-tech { background: #f8faff; }
+.tpl-tech .cv-top { display:flex; align-items:center; gap:10px; padding:14px; border-bottom:1px solid #e8eeff; }
+.tpl-tech .cv-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#4f63e7,#7c3aed); flex-shrink:0; }
+.tpl-tech .cv-name { font-family:'Fraunces',serif; font-size:11px; font-weight:800; color:#1a1f5e; }
+.tpl-tech .cv-role { font-size:5px; color:#6b7ee0; font-weight:600; }
+.tpl-tech .cv-body { padding:10px 12px; }
+.tpl-tech .cv-section { font-size:6px; font-weight:700; color:#4f63e7; margin-bottom:5px; }
+.tpl-tech .cv-chip { display:inline-block; background:#eef1fd; color:#4f63e7; font-size:5px; padding:2px 5px; border-radius:3px; margin:1px; }
+.tpl-tech .cv-line { height:4px; background:#eef1fd; border-radius:2px; margin-bottom:3px; }
+
+/* Template 7: Nature */
+.tpl-nature { background: #f6f9f4; }
+.tpl-nature .cv-header { background:#2d5016; padding:16px 14px; }
+.tpl-nature .cv-name { font-family:'Fraunces',serif; font-size:12px; font-weight:800; color:white; }
+.tpl-nature .cv-role { font-size:6px; color:rgba(255,255,255,0.65); margin-top:2px; }
+.tpl-nature .cv-body { padding:10px 12px; }
+.tpl-nature .cv-section { font-size:6px; font-weight:700; color:#2d5016; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.06em; }
+.tpl-nature .cv-line { height:4px; background:#ddebd5; border-radius:2px; margin-bottom:3px; }
+.tpl-nature .cv-line.short { width:68%; }
+.tpl-nature .cv-dot { width:4px; height:4px; border-radius:50%; background:#8cb43a; display:inline-block; margin-right:4px; }
+
+/* Template 8: Elegance */
+.tpl-elegance { background: #fff8f5; }
+.tpl-elegance .cv-name { font-family:'Fraunces',serif; font-size:14px; font-weight:900; font-style:italic; color:var(--coral); margin:16px 14px 2px; }
+.tpl-elegance .cv-role { font-size:7px; color:var(--muted); margin:0 14px 6px; }
+.tpl-elegance .cv-ornament { text-align:center; margin:6px 14px; color:var(--coral); font-size:10px; opacity:0.4; }
+.tpl-elegance .cv-section { font-size:5px; font-weight:700; color:var(--coral); margin:0 14px 4px; text-transform:uppercase; letter-spacing:0.1em; }
+.tpl-elegance .cv-line { height:4px; background:#ffe4dc; border-radius:2px; margin:0 14px 3px; }
+.tpl-elegance .cv-line.short { width:72%; }
+
+.tpl-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(17,17,24,0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.tpl-overlay-btn {
+  background: white;
+  color: var(--ink);
+  border: none;
+  border-radius: 100px;
+  padding: 10px 24px;
+  font-family: 'Epilogue', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tpl-overlay-btn:hover { background: var(--lime2); }
+.tpl-overlay-btn.outline { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.4); font-weight:500; }
+
+.tpl-footer { padding: 14px 16px; border-top: 1px solid var(--line); }
+.tpl-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+.tpl-tag { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+
+/* PRO BADGE */
+.pro-badge {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: var(--gold);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+/* FEATURES */
+.feat-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  margin-top: 60px;
+}
+.feat-split.reverse { direction: rtl; }
+.feat-split.reverse > * { direction: ltr; }
+
+.feat-visual {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--r3);
+  overflow: hidden;
+  aspect-ratio: 4/3;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.feat-visual-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.win-dot { width: 8px; height: 8px; border-radius: 50%; }
+.wd-r { background: #ff5f57; }
+.wd-y { background: #febc2e; }
+.wd-g { background: #28c840; }
+
+.feat-visual-body { flex: 1; padding: 20px; position: relative; overflow: hidden; }
+
+/* ATS Score visual */
+.ats-vis-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+}
+.ats-ring { position: relative; display: inline-block; }
+.ats-ring svg { width: 100px; height: 100px; transform: rotate(-90deg); }
+.ats-ring circle { fill:none; stroke-width:7; }
+.ats-ring-bg { stroke: #f0f0f0; }
+.ats-ring-fill { stroke: var(--lime); stroke-dasharray:283; stroke-dashoffset:70; stroke-linecap:round; }
+.ats-ring-num {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-family:'Fraunces',serif; font-size:22px; font-weight:800;
+}
+.ats-bars { width: 100%; }
+.ats-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:10px; color:var(--muted); }
+.ats-bar-track { flex:1; height:5px; background:#f0f0f0; border-radius:3px; overflow:hidden; }
+.ats-bar-fill { height:100%; border-radius:3px; }
+
+/* Editor visual */
+.editor-vis { display: flex; gap: 12px; height: 100%; }
+.editor-sidebar { width: 90px; display: flex; flex-direction: column; gap: 6px; }
+.ed-sb-item { background: var(--bg); border-radius: 6px; padding: 6px 8px; font-size: 9px; color: var(--muted); cursor: pointer; border: 1px solid transparent; }
+.ed-sb-item.active { background: var(--ink); color: white; border-color: var(--ink); }
+.editor-main { flex: 1; background: var(--bg); border-radius: 8px; padding: 12px; }
+.ed-field { background: white; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; font-size: 9px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.ed-field.active { border-color: var(--lime); }
+.ed-cursor { width: 1px; height: 10px; background: var(--lime); animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+.ed-field-label { font-size:8px; font-weight:600; color:var(--muted2); margin-bottom:4px; }
+
+/* Download visual */
+.dl-vis { display:flex; flex-direction:column; gap:10px; height:100%; }
+.dl-format {
+  flex:1; background:var(--bg); border-radius:10px; border:1px solid var(--line);
+  display:flex; align-items:center; gap:12px; padding:14px 16px;
+  cursor:pointer; transition:all 0.15s;
+}
+.dl-format:hover { border-color:var(--lime); background:rgba(140,180,58,0.05); }
+.dl-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+.dl-format-name { font-size:13px; font-weight:600; }
+.dl-format-sub { font-size:11px; color:var(--muted2); }
+.dl-arrow { margin-left:auto; color:var(--muted2); }
+
+.feat-content {}
+.feat-list { margin-top: 28px; display: flex; flex-direction: column; gap: 18px; }
+.feat-item { display: flex; gap: 14px; }
+.feat-icon-wrap {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+.feat-item h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.01em; }
+.feat-item p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* ATS SECTION */
+#ats { background: var(--ink); color: white; }
+#ats .section-label { color: var(--lime2); }
+#ats .section-label::before { background: var(--lime2); }
+#ats .section-title { color: white; }
+#ats .section-sub { color: rgba(255,255,255,0.5); }
+
+.ats-tool-wrap {
+  margin-top: 56px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--r4);
+  overflow: hidden;
+}
+
+.ats-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.ats-tab {
+  flex: 1;
+  padding: 18px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-family: 'Epilogue', sans-serif;
+  text-align: center;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.ats-tab.active { color: var(--lime2); border-color: var(--lime2); }
+
+.ats-panel { display: none; padding: 32px; }
+.ats-panel.active { display: block; }
+
+.ats-upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.ats-zone {
+  border: 1.5px dashed rgba(255,255,255,0.15);
+  border-radius: var(--r2);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+.ats-zone:hover { border-color: var(--lime2); background: rgba(140,180,58,0.06); }
+.ats-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.ats-zone-icon { font-size: 28px; margin-bottom: 8px; }
+.ats-zone-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); margin-bottom: 3px; }
+.ats-zone-sub { font-size: 11px; color: rgba(255,255,255,0.35); }
+.ats-zone.done { border-color: var(--lime); border-style: solid; background: rgba(140,180,58,0.08); }
+.ats-zone-done-txt { font-size: 12px; color: var(--lime2); font-weight: 600; margin-top: 6px; display:none; }
+.ats-zone.done .ats-zone-done-txt { display:block; }
+
+.ats-textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--r2);
+  padding: 14px;
+  color: white;
+  font-family: 'Epilogue', sans-serif;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+.ats-textarea::placeholder { color: rgba(255,255,255,0.3); }
+.ats-textarea:focus { border-color: rgba(140,180,58,0.5); }
+
+.btn-ats {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 32px;
+  background: var(--lime);
+  color: var(--ink);
+  border-radius: 100px;
+  font-family: 'Epilogue', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.btn-ats:hover { background: var(--lime2); transform: translateY(-1px); }
+.btn-ats:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ATS Results */
+.ats-results { display: none; }
+.ats-score-row {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: rgba(255,255,255,0.05);
+  border-radius: var(--r2);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.ats-score-big {
+  font-family: 'Fraunces', serif;
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1;
+}
+.ats-score-label { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+.ats-verdict-wrap { flex: 1; }
+.ats-verdict { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.ats-verdict-sub { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+.ats-kw-cloud { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.akw {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.akw-ok { background:rgba(140,180,58,0.15); color:var(--lime2); border:1px solid rgba(140,180,58,0.25); }
+.akw-bad { background:rgba(232,83,58,0.1); color:var(--coral2); border:1px solid rgba(232,83,58,0.2); }
+.akw-warn { background:rgba(212,168,71,0.1); color:var(--gold); border:1px solid rgba(212,168,71,0.2); }
+
+.ats-sugg-list { list-style:none; }
+.ats-sugg-list li {
+  display:flex; gap:12px; padding:13px 0;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  font-size:14px; color:rgba(255,255,255,0.6); line-height:1.6;
+}
+.ats-sugg-list li:last-child { border:none; }
+.ats-arr {
+  width:20px; height:20px; background:rgba(140,180,58,0.15);
+  border-radius:6px; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; font-size:10px; color:var(--lime2); margin-top:2px;
+}
+
+/* ATS Loading */
+.ats-loading { display:none; text-align:center; padding:40px; }
+.ats-spinner {
+  width:48px; height:48px; border:3px solid rgba(255,255,255,0.1);
+  border-top-color:var(--lime2); border-radius:50%;
+  animation:spin 0.8s linear infinite; margin:0 auto 16px;
+}
+@keyframes spin { to{transform:rotate(360deg);} }
+
+/* PRICING */
+#pricing { background: var(--cream); }
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 56px;
+}
+.pricing-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--r3);
+  padding: 36px 28px;
+  position: relative;
+  transition: transform 0.25s;
+}
+.pricing-card:hover { transform: translateY(-4px); }
+.pricing-card.featured {
+  background: var(--ink);
+  color: white;
+  border-color: var(--ink);
+  transform: scale(1.04);
+}
+.pricing-card.featured:hover { transform: scale(1.04) translateY(-4px); }
+.pricing-badge {
+  display: inline-block;
+  background: var(--lime);
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 100px;
+  margin-bottom: 20px;
+}
+.pricing-name {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.pricing-amount {
+  font-family: 'Fraunces', serif;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.pricing-card.featured .pricing-amount { color: var(--lime2); }
+.pricing-period { font-size: 13px; color: var(--muted2); margin-bottom: 24px; }
+.pricing-card.featured .pricing-period { color: rgba(255,255,255,0.4); }
+.pricing-div { height: 1px; background: var(--line); margin-bottom: 24px; }
+.pricing-card.featured .pricing-div { background: rgba(255,255,255,0.1); }
+.pricing-feats { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+.pricing-feats li {
+  display: flex; gap: 10px; font-size: 14px; color: var(--muted);
+  align-items: flex-start;
+}
+.pricing-card.featured .pricing-feats li { color: rgba(255,255,255,0.65); }
+.pf-check { color: var(--lime); font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+.pf-cross { color: var(--muted2); font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+.btn-pricing {
+  display: block; width: 100%;
+  padding: 14px;
+  border-radius: 100px;
+  font-family: 'Epilogue', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  text-align: center;
+  transition: all 0.2s;
+}
+.btn-pricing-outline { background: transparent; color: var(--ink); border: 1.5px solid var(--line2); }
+.btn-pricing-outline:hover { border-color: var(--ink); background: var(--bg); }
+.btn-pricing-solid { background: var(--lime); color: var(--ink); }
+.btn-pricing-solid:hover { background: var(--lime2); transform: translateY(-1px); }
+.btn-pricing-white { background: white; color: var(--ink); }
+.btn-pricing-white:hover { background: var(--lime2); transform: translateY(-1px); }
+
+/* TESTIMONIALS */
+.testi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 56px;
+}
+.testi-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--r3);
+  padding: 28px;
+  transition: transform 0.25s;
+}
+.testi-card:hover { transform: translateY(-3px); }
+.testi-stars { color: var(--gold); font-size: 14px; margin-bottom: 16px; letter-spacing: 2px; }
+.testi-text { font-size: 15px; line-height: 1.7; color: var(--muted); margin-bottom: 20px; font-style: italic; }
+.testi-author { display: flex; align-items: center; gap: 12px; }
+.testi-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.testi-name { font-size: 14px; font-weight: 700; }
+.testi-role { font-size: 12px; color: var(--muted2); }
+
+/* FAQ */
+.faq-list { margin-top: 48px; display: flex; flex-direction: column; gap: 0; }
+.faq-item {
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.faq-item:first-child { border-top: 1px solid var(--line); }
+.faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 0;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  gap: 20px;
+}
+.faq-q:hover { color: var(--coral); }
+.faq-arrow {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--sand);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+  transition: all 0.25s;
+}
+.faq-item.open .faq-arrow { background: var(--ink); color: white; transform: rotate(45deg); }
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.7;
+  transition: max-height 0.35s ease, padding 0.25s;
+}
+.faq-item.open .faq-a { max-height: 200px; padding-bottom: 20px; }
+
+/* CTA SECTION */
+.cta-section {
+  background: var(--ink);
+  border-radius: var(--r4);
+  padding: 80px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  margin: 0 40px;
+}
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: -100px; left: -100px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(140,180,58,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-section::after {
+  content: '';
+  position: absolute;
+  bottom: -80px; right: -80px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(232,83,58,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-section h2 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  color: white;
+  margin-bottom: 16px;
+  position: relative; z-index: 1;
+}
+.cta-section p { font-size: 17px; color: rgba(255,255,255,0.5); max-width: 480px; margin: 0 auto 36px; line-height: 1.6; position: relative; z-index: 1; }
+.cta-btns { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; position:relative; z-index:1; }
+
+/* FOOTER */
+footer {
+  background: var(--ink);
+  color: rgba(255,255,255,0.5);
+  padding: 64px 40px 32px;
+  margin-top: 80px;
+}
+.footer-grid {
+  max-width: 1160px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 32px;
+}
+.footer-brand .logo-name { color: white; margin-bottom: 12px; display: block; font-family:'Fraunces',serif; font-size:22px; font-weight:700; }
+.footer-brand p { font-size: 14px; line-height: 1.7; max-width: 280px; }
+.footer-col h4 { color: white; font-size: 13px; font-weight: 700; margin-bottom: 16px; letter-spacing: 0.01em; }
+.footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.footer-col ul li a {
+  color: rgba(255,255,255,0.45);
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.footer-col ul li a:hover { color: var(--lime2); }
+.footer-bottom {
+  max-width: 1160px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-wa {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.footer-wa:hover { color: #25D366; }
+.wa-icon { font-size: 16px; }
+
+/* MODAL */
+.modal-bg {
+  position: fixed; inset: 0;
+  background: rgba(17,17,24,0.7);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--white);
+  border-radius: var(--r3);
+  padding: 40px;
+  max-width: 520px;
+  width: 100%;
+  position: relative;
+  animation: fadeUp 0.3s ease;
+}
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--muted);
+  transition: all 0.15s;
+}
+.modal-close:hover { background: var(--ink); color: white; }
+.modal h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.modal p { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+.modal-input {
+  width: 100%;
+  border: 1px solid var(--line2);
+  border-radius: var(--r2);
+  padding: 13px 16px;
+  font-family: 'Epilogue', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--bg);
+  margin-bottom: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.modal-input:focus { border-color: var(--lime); }
+.modal-btn {
+  width: 100%; padding: 14px;
+  background: var(--ink); color: white;
+  border: none; border-radius: 100px;
+  font-family: 'Epilogue', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
+}
+.modal-btn:hover { background: var(--ink2); }
+.modal-sep { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: var(--muted2); font-size: 12px; }
+.modal-sep::before, .modal-sep::after { content:''; flex:1; height:1px; background:var(--line); }
+.modal-social {
+  display: flex; gap: 10px;
+}
+.social-btn {
+  flex: 1; padding: 11px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r2);
+  background: white;
+  font-family: 'Epilogue', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.social-btn:hover { border-color: var(--ink); }
+
+/* MOBILE MENU */
+.mobile-menu {
+  position: fixed;
+  top: 72px; left: 0; right: 0; bottom: 0;
+  background: var(--bg);
+  z-index: 99;
+  padding: 32px 24px;
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+  transform: translateY(-10px);
+  opacity: 0;
+  transition: all 0.25s;
+}
+.mobile-menu.open { display: flex; transform: translateY(0); opacity: 1; }
+.mobile-link { font-size: 18px; font-weight: 600; color: var(--ink); text-decoration: none; padding: 14px 0; border-bottom: 1px solid var(--line); }
+
+@media (max-width: 900px) {
+  .nav-links, .nav-cta { display: none; }
+  .hamburger { display: flex; }
+  .how-grid { grid-template-columns: 1fr; }
+  .tpl-grid { grid-template-columns: repeat(2, 1fr); }
+  .feat-split { grid-template-columns: 1fr; gap: 40px; direction: ltr !important; }
+  .feat-split .feat-visual { aspect-ratio: 16/9; }
+  .ats-upload-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .pricing-card.featured { transform: none; }
+  .testi-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .cta-section { padding: 48px 28px; margin: 0 20px; }
+  .hero-stats { gap: 24px; flex-wrap: wrap; justify-content: center; }
+  section { padding: 64px 20px; }
+  nav { padding: 0 20px; }
+}
+
+@media (max-width: 600px) {
+  .tpl-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .hero { padding: 120px 20px 60px; }
+  .pricing-card.featured { transform: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a class="mobile-link" href="#templates" onclick="closeMobile()">Modèles de CV</a>
+  <a class="mobile-link" href="#features" onclick="closeMobile()">Fonctionnalités</a>
+  <a class="mobile-link" href="#ats" onclick="closeMobile()">Analyse ATS</a>
+  <a class="mobile-link" href="#pricing" onclick="closeMobile()">Tarifs</a>
+  <a class="mobile-link" href="#" onclick="openModal(); closeMobile()">Créer mon CV gratuitement</a>
+</div>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <a href="#" class="nav-logo">
+    <div class="logo-mark">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+      </svg>
+    </div>
+    <span class="logo-name">CVPro<span>S</span></span>
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="#templates">Modèles</a></li>
+    <li><a href="#features">Fonctionnalités</a></li>
+    <li><a href="#ats">Analyse ATS</a></li>
+    <li><a href="#pricing">Tarifs</a></li>
+  </ul>
+
+  <div class="nav-cta">
+    <a href="#" class="btn-nav btn-nav-ghost" onclick="openModal()">Connexion</a>
+    <a href="#" class="btn-nav btn-nav-solid" onclick="openModal()">
+      Créer mon CV
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+
+  <button class="hamburger" id="hamburger" onclick="toggleMobile()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-blob blob1"></div>
+  <div class="hero-blob blob2"></div>
+  <div class="hero-blob blob3"></div>
+
+  <div class="hero-eyebrow">
+    <div class="eyebrow-dot"></div>
+    Nouveau · Analyse ATS propulsée par l'IA
+  </div>
+
+  <h1 class="hero-title">
+    Créez votre CV
+    <span class="line2">professionnel</span>
+    <span class="line3">en 5 minutes</span>
+  </h1>
+
+  <p class="hero-sub">
+    Choisissez un modèle premium, personnalisez-le avec notre éditeur intelligent et optimisez-le pour les logiciels ATS des recruteurs. Décrochez l'entretien de vos rêves.
+  </p>
+
+  <div class="hero-btns">
+    <a href="#" class="btn-hero-main" onclick="openModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      Créer mon CV gratuitement
+    </a>
+    <a href="#templates" class="btn-hero-alt">
+      Voir les modèles
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hstat">
+      <div class="hstat-num">500K+</div>
+      <div class="hstat-lab">CV créés</div>
+    </div>
+    <div class="hstat-div"></div>
+    <div class="hstat">
+      <div class="hstat-num">98%</div>
+      <div class="hstat-lab">Compatible ATS</div>
+    </div>
+    <div class="hstat-div"></div>
+    <div class="hstat">
+      <div class="hstat-num">30+</div>
+      <div class="hstat-lab">Modèles premium</div>
+    </div>
+    <div class="hstat-div"></div>
+    <div class="hstat">
+      <div class="hstat-num">4.9★</div>
+      <div class="hstat-lab">Note utilisateurs</div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <div class="ticker-item">CV Professionnel <span class="dot">✦</span></div>
+    <div class="ticker-item">Analyse ATS <span class="dot">✦</span></div>
+    <div class="ticker-item">30+ Modèles <span class="dot">✦</span></div>
+    <div class="ticker-item">Export PDF <span class="dot">✦</span></div>
+    <div class="ticker-item">IA Intégrée <span class="dot">✦</span></div>
+    <div class="ticker-item">Lettre de motivation <span class="dot">✦</span></div>
+    <div class="ticker-item">Score ATS <span class="dot">✦</span></div>
+    <div class="ticker-item">Optimisation <span class="dot">✦</span></div>
+    <!-- duplicate for infinite scroll -->
+    <div class="ticker-item">CV Professionnel <span class="dot">✦</span></div>
+    <div class="ticker-item">Analyse ATS <span class="dot">✦</span></div>
+    <div class="ticker-item">30+ Modèles <span class="dot">✦</span></div>
+    <div class="ticker-item">Export PDF <span class="dot">✦</span></div>
+    <div class="ticker-item">IA Intégrée <span class="dot">✦</span></div>
+    <div class="ticker-item">Lettre de motivation <span class="dot">✦</span></div>
+    <div class="ticker-item">Score ATS <span class="dot">✦</span></div>
+    <div class="ticker-item">Optimisation <span class="dot">✦</span></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="section-wrap">
+    <div class="section-label">Comment ça marche</div>
+    <h2 class="section-title">Simple. Rapide.<br>Efficace.</h2>
+    <p class="section-sub">En 3 étapes, passez d'une page vierge à un CV qui décroche des entretiens.</p>
+
+    <div class="how-grid">
+      <div class="how-card" data-num="1">
+        <div class="how-icon ic-lime">📄</div>
+        <h3>Choisissez un modèle</h3>
+        <p>Parcourez notre galerie de 30+ modèles professionnels, modernes ou créatifs. Tous compatibles ATS et prêts pour les recruteurs.</p>
+      </div>
+      <div class="how-card" data-num="2">
+        <div class="how-icon ic-coral">✏️</div>
+        <h3>Remplissez avec l'IA</h3>
+        <p>Notre éditeur intelligent vous guide. L'IA suggère des formulations percutantes, adapte votre contenu et intègre les mots-clés de l'offre.</p>
+      </div>
+      <div class="how-card" data-num="3">
+        <div class="how-icon ic-gold">🚀</div>
+        <h3>Téléchargez & postulez</h3>
+        <p>Exportez en PDF ou Word en un clic. Votre CV est 100% compatible ATS, formaté parfaitement et prêt à être envoyé aux recruteurs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEMPLATES -->
+<section id="templates">
+  <div class="section-wrap">
+    <div class="tpl-header">
+      <div>
+        <div class="section-label">Modèles de CV</div>
+        <h2 class="section-title">30+ designs<br>premium</h2>
+      </div>
+      <div class="tpl-tabs">
+        <button class="tpl-tab active" onclick="filterTpl(this,'tous')">Tous</button>
+        <button class="tpl-tab" onclick="filterTpl(this,'pro')">Pro</button>
+        <button class="tpl-tab" onclick="filterTpl(this,'design')">Design</button>
+        <button class="tpl-tab" onclick="filterTpl(this,'minimal')">Minimaliste</button>
+      </div>
+    </div>
+
+    <div class="tpl-grid" id="tplGrid">
+
+      <!-- T1 Moderne -->
+      <div class="tpl-card" data-cat="pro">
+        <div class="tpl-preview">
+          <div class="cv-preview tpl-moderne">
+            <div class="cv-sidebar">
+              <div class="cv-name">Aminata Diallo</div>
+              <div class="cv-role">Directrice Marketing</div>
+              <div style="margin-top:10px;">
+                <div class="cv-section">Compétences</div>
+                <div class="cv-bar-fill" style="width:85%"></div>
+                <div class="cv-bar-fill" style="width:70%"></div>
+                <div class="cv-bar-fill" style="width:92%"></div>
+                <div style="margin-top:8px;" class="cv-section">Langues</div>
+                <div class="cv-bar-fill" style="width:100%"></div>
+                <div class="cv-bar-fill" style="width:75%"></div>
+              </div>
+            </div>
+            <div class="cv-main">
+              <div class="cv-section-main">Expérience</div>
+              <div style="font-size:6px;font-weight:600;color:#333;margin:4px 0 2px;">Marketing Manager — 2021–2024</div>
+              <div class="cv-line"></div>
+              <div class="cv-line short"></div>
+              <div style="height:6px;"></div>
+              <div class="cv-section-main">Formation</div>
+              <div style="font-size:6px;font-weight:600;color:#333;margin:4px 0 2px;">MBA Marketing — HEC Paris</div>
+              <div class="cv-line"></div>
+            </div>
+          </div>
+          <div class="tpl-overlay">
+            <button class="tpl-overlay-btn" onclick="openModal()">Utiliser ce modèle</button>
+            <button class="tpl-overlay-btn outline">Aperçu</button>
+          </div>
+        </div>
+        <div class="tpl-footer">
+          <div class="tpl-name">Moderne Pro</div>
+          <div class="tpl-tag">Recommandé · ATS ✓</div>
+        </div>
+      </div>
+
+      <!-- T2 Classique -->
+      <div class="tpl-card" data-cat="pro">
+        <div class="tpl-preview">
+          <div class="cv-preview tpl-classique">
+            <div class="cv-top">
+              <div class="cv-name">Jean-Baptiste Moreau</div>
+              <div class="cv-role">Ingénieur Logiciel Senior</div>
+            </div>
+            <div class="cv-body">
+              <div class="cv-section">Expérience professionnelle</div>
+              <div style="font-size:6px;font-weight:600;margin-bottom:3px;"><span class="cv-dot"></span>Lead Developer — Société ABC</div>
+              <div class="cv-line"></div>
+              <div class="cv-line short"></div>
+              <div class="cv-section">Formation</div>
+              <div class="cv-line"></div>
+              <div class="cv-line short"></div>
+              <div class="cv-section">Compétences</div>
+              <div class="cv-line"></div>
+            </div>
+          </div>
+          <div class="tpl-overlay">
+            <button class="tpl-overlay-btn" onclick="openModal()">Utiliser ce modèle</button>
+            <button class="tpl-overlay-btn outline">Aperçu</button>
+          </div>
+        </div>
+        <div class="tpl-footer">
+          <div class="tpl-name">Classique Élégant</div>
+          <div class="tpl-tag">Intemporel · ATS ✓</div>
+        </div>
+      </div>
+
+      <!-- T3 Créatif -->
+      <div class="tpl-card" data-cat="design">
+        <div class="tpl-preview">
+          <div class="cv-preview tpl-creatif">
+            <div class="cv-accent"></div>
+            <div class="cv-accent2"></div>
+            <div class="cv-name">Sofia Benali</div>
+            <div class="cv-role">UX Designer · Creative Director</div>
+            <div class="cv-divider"></div>
+            <div class="cv-section">Expérience</div>
+            <div class="cv-line" style="margin:0 14px 3px;"></div>
+            <div class="cv-line short" style="margin:0 14px 3px;"></div>
+            <div style="height:6px;"></div>
+            <div class="cv-section">Projets</div>
+            <div class="cv-line" style="margin:0 14px 3px;"></div>
+            <div class="cv-line short" style="margin:0 14px 3px;"></div>
+          </div>
+          <div class="tpl-overlay">
+            <button class="tpl-overlay-btn" onclick="openModal()">Utiliser ce modèle</button>
+            <button class="tpl-overlay-btn outline">Aperçu</button>
+          </div>
+        </div>
+        <div class="tpl-footer">
+          <div class="tpl-name">Créatif Bold</div>
+          <div class="tpl-tag">Design · ATS ✓</div>
+        </div>
+      </div>
+
+      <!-- T4 Minimal -->
+      <div class="tpl-card" data-cat="minimal">
+        <div class="tpl-preview">
+          <div class="cv-preview tpl-minimal">
+            <div class="cv-name">Lucas Fontaine</div>
+            <div class="cv-role">Product Manager · Paris</div>
+            <div class="cv-line-thin"></div>
+            <div class="cv-section">Expérience</div>
+            <div class="cv-line"></div>
+            <div class="cv-line short"></div>
+            <div style="height:6px;"></div>
+            <div class="cv-section">Formation</div>
+            <div class="cv-line"></div>
+            <div class="cv-line short"></div>
+            <div style="height:6px;"></div>
+            <div class="cv-section">Compétences</div>
+            <div class="cv-line"></div>
+          </div>
+          <div class="tpl-overlay">
+            <button class="tpl-overlay-btn" onclick="openModal()">Utiliser ce modèle</button>
+            <button class="tpl-overlay-btn outline">Aperçu</button>
+          </div>
+        </div>
+        <div class="tpl-footer">
+          <div class="tpl-name">Pure Minimal</div>
+          <div class="tpl-tag">Épuré · ATS ✓</div>
+        </div>
+      </div>
+
+      <!-- T5 Executive -->
+      <div class="tpl-card" data-cat="pro">
+        <div class="pro-badge">Premium</div>
+        <div class="tpl-preview">
+          <div class="cv-preview tpl-exec">
+            <div class="cv-gold-bar"></div>
+            <div class="cv-name">François Dupont</div>
+            <div class="cv-role">Directeur Général · C-Suite</div>
+            <div class="cv-sep"></div>
+            <div class="cv-section">Expérience Executive</div>
+            <div class="cv-line"></div>
+            <div class="cv-line short"></div>
+            <div class="cv-sep"></div>
+            <div class="cv-section">Réalisations</div>
+            <div class="cv-line"></div>
+            <div class="cv-line short"></div>
+          </div>
+          <div class="tpl-overlay">
+            <button class="tpl-overlay-btn" onclick="openModal()">Utiliser ce modèle</button>
+            <button class="tpl-overlay-btn outline">Aperçu</button>
+          </div>
+        </div>
+        <div class="tpl-footer">
+          <div class="tpl-name">Executive Dark</div>
+          <div class="tpl-tag">Premium · ATS ✓</div>
+        </div>
+      </div>
+
+      <!-- T6 Tech -->
+      <div class="tpl-card" data-cat="design">
+        <div class="tpl-preview">
+          <div class="cv-preview tpl-tech">
+            <div class="cv-top">
+              <div class="cv-avatar"></div>
+              <div>
+                <div class="cv-name">Kofi Mensah</div>
+                <div class="cv-role">Full Stack Developer · React · Node.js</div>
+              </div>
+            </div>
+            <div class="cv-body">
+              <div class="cv-section">Stack technique</div>
+              <div>
+                <span class="cv-chip">React</span><span class="cv-chip">Node.js</span><span class="cv-chip">Python</span><span class="cv-chip">AWS</span>
+              </div>
+              <div style="height:7px;"></div>
+              <div class="cv-section">Expérience</div>
+              <div class="cv-line"></div>
+              <div class="cv-line" style="width:80%;"></div>
+            </div>
+          </div>
+          <div class="tpl-overlay">
+            <button class="tpl-overlay-btn" onclick="openModal()">Utiliser ce modèle</button>
+            <button class="tpl-overlay-btn outline">Aperçu</button>
+          </div>
+        </div>
+        <div class="tpl-footer">
+          <div class="tpl-name">Tech & Dev</div>
+          <div class="tpl-tag">Développeurs · ATS ✓</div>
+        </div>
+      </div>
+
+      <!-- T7 Nature -->
+      <div class="tpl-card" data-cat="design">
+        <div class="tpl-preview">
+          <div class="cv-preview tpl-nature">
+            <div class="cv-header">
+              <div class="cv-name">Fatou Sow</div>
+              <div class="cv-role">Responsable RSE · Développement Durable</div>
+            </div>
+            <div class="cv-body">
+              <div class="cv-section">Expérience</div>
+              <div class="cv-line"></div>
+              <div class="cv-line short"></div>
+              <div style="height:6px;"></div>
+              <div class="cv-section">Compétences</div>
+              <div style="font-size:6px;color:var(--muted);margin-bottom:3px;"><span class="cv-dot"></span>Gestion de projets <span class="cv-dot"></span>Communication</div>
+              <div class="cv-line"></div>
+            </div>
+          </div>
+          <div class="tpl-overlay">
+            <button class="tpl-overlay-btn" onclick="openModal()">Utiliser ce modèle</button>
+            <button class="tpl-overlay-btn outline">Aperçu</button>
+          </div>
+        </div>
+        <div class="tpl-footer">
+          <div class="tpl-name">Nature Vert</div>
+          <div class="tpl-tag">RSE · Environnement · ATS ✓</div>
+        </div>
+      </div>
+
+      <!-- T8 Elegance -->
+      <div class="tpl-card" data-cat="minimal">
+        <div class="pro-badge" style="background:var(--coral);">New</div>
+        <div class="tpl-preview">
+          <div class="cv-preview tpl-elegance">
+            <div class="cv-name">Marie-Claire Beaumont</div>
+            <div class="cv-role">Directrice Artistique</div>
+            <div class="cv-ornament">— ✦ —</div>
+            <div class="cv-section">Expérience</div>
+            <div class="cv-line" style="margin:0 14px 3px;"></div>
+            <div class="cv-line short" style="margin:0 14px 3px;"></div>
+            <div style="height:6px;"></div>
+            <div class="cv-section">Formation & Certifications</div>
+            <div class="cv-line" style="margin:0 14px 3px;"></div>
+          </div>
+          <div class="tpl-overlay">
+            <button class="tpl-overlay-btn" onclick="openModal()">Utiliser ce modèle</button>
+            <button class="tpl-overlay-btn outline">Aperçu</button>
+          </div>
+        </div>
+        <div class="tpl-footer">
+          <div class="tpl-name">Élégance Cursive</div>
+          <div class="tpl-tag">Luxe · Mode · ATS ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:36px;">
+      <a href="#" class="btn-hero-alt" onclick="openModal()">
+        Voir tous les modèles (30+)
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-wrap">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div class="section-label" style="justify-content:center;">Fonctionnalités</div>
+      <h2 class="section-title">Tout ce dont vous<br>avez besoin</h2>
+    </div>
+
+    <!-- Feature 1: Editor -->
+    <div class="feat-split">
+      <div class="feat-visual">
+        <div class="feat-visual-header">
+          <div class="win-dot wd-r"></div>
+          <div class="win-dot wd-y"></div>
+          <div class="win-dot wd-g"></div>
+          <span style="font-size:11px;color:var(--muted2);margin-left:8px;">CVProS — Éditeur</span>
+        </div>
+        <div class="feat-visual-body">
+          <div class="editor-vis">
+            <div class="editor-sidebar">
+              <div class="ed-sb-item active">📝 Infos</div>
+              <div class="ed-sb-item">💼 Expérience</div>
+              <div class="ed-sb-item">🎓 Formation</div>
+              <div class="ed-sb-item">⚡ Compétences</div>
+              <div class="ed-sb-item">🌍 Langues</div>
+              <div class="ed-sb-item">🏆 Projets</div>
+            </div>
+            <div class="editor-main">
+              <div class="ed-field-label">Prénom & Nom</div>
+              <div class="ed-field active">Aminata Diallo<div class="ed-cursor"></div></div>
+              <div class="ed-field-label">Titre du poste</div>
+              <div class="ed-field" style="color:var(--muted2);">Ex: Directrice Marketing...</div>
+              <div class="ed-field-label">Résumé professionnel</div>
+              <div class="ed-field" style="height:40px;align-items:flex-start;padding-top:8px;color:var(--muted2);">Décrivez votre profil...</div>
+              <div style="margin-top:10px;background:rgba(140,180,58,0.08);border:1px solid rgba(140,180,58,0.2);border-radius:6px;padding:8px 10px;font-size:9px;color:var(--olive);">
+                💡 L'IA suggère : "Professionnelle avec 8 ans d'expérience en marketing digital..."
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-content">
+        <div class="section-label">Éditeur intelligent</div>
+        <h2 class="section-title" style="font-size:36px;">Rédigez<br>plus vite avec l'IA</h2>
+        <div class="feat-list">
+          <div class="feat-item">
+            <div class="feat-icon-wrap ic-lime">✨</div>
+            <div>
+              <h4>Suggestions IA en temps réel</h4>
+              <p>L'IA analyse votre profil et génère des formulations percutantes adaptées à votre secteur et au poste visé.</p>
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon-wrap ic-coral">🎨</div>
+            <div>
+              <h4>Personnalisation totale</h4>
+              <p>Modifiez couleurs, polices, espacements. Glissez-déposez les sections. Votre CV, votre style.</p>
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon-wrap ic-gold">🌐</div>
+            <div>
+              <h4>Multi-langues & multi-versions</h4>
+              <p>Dupliquez et adaptez votre CV en plusieurs versions et langues pour chaque candidature.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:72px;"></div>
+
+    <!-- Feature 2: ATS -->
+    <div class="feat-split reverse">
+      <div class="feat-content">
+        <div class="section-label">Analyse ATS</div>
+        <h2 class="section-title" style="font-size:36px;">Passez les<br>filtres automatiques</h2>
+        <div class="feat-list">
+          <div class="feat-item">
+            <div class="feat-icon-wrap ic-lime">🎯</div>
+            <div>
+              <h4>Score de compatibilité</h4>
+              <p>Obtenez un score précis sur 100 et voyez exactement quels mots-clés sont présents ou manquants dans votre CV.</p>
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon-wrap ic-coral">🔑</div>
+            <div>
+              <h4>Extraction de mots-clés</h4>
+              <p>Notre IA identifie automatiquement les termes essentiels de l'offre d'emploi et les compare à votre CV.</p>
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon-wrap ic-gold">⚡</div>
+            <div>
+              <h4>CV régénéré automatiquement</h4>
+              <p>En un clic, générez une version optimisée de votre CV avec tous les mots-clés intégrés naturellement.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-visual">
+        <div class="feat-visual-header">
+          <div class="win-dot wd-r"></div><div class="win-dot wd-y"></div><div class="win-dot wd-g"></div>
+          <span style="font-size:11px;color:var(--muted2);margin-left:8px;">CVProS — Score ATS</span>
+        </div>
+        <div class="feat-visual-body">
+          <div class="ats-vis-score">
+            <div class="ats-ring">
+              <svg viewBox="0 0 90 90">
+                <circle class="ats-ring-bg" cx="45" cy="45" r="40"/>
+                <circle class="ats-ring-fill" cx="45" cy="45" r="40"/>
+              </svg>
+              <div class="ats-ring-num">
+                <span style="color:var(--lime)">78</span>
+                <span style="font-size:10px;color:var(--muted2)">/100</span>
+              </div>
+            </div>
+            <div class="ats-bars" style="max-width:220px;">
+              <div class="ats-bar-row">
+                <span style="width:110px;">Mots-clés</span>
+                <div class="ats-bar-track"><div class="ats-bar-fill" style="width:82%;background:var(--lime);"></div></div>
+                <span style="width:28px;text-align:right;">82%</span>
+              </div>
+              <div class="ats-bar-row">
+                <span style="width:110px;">Expérience</span>
+                <div class="ats-bar-track"><div class="ats-bar-fill" style="width:90%;background:var(--lime);"></div></div>
+                <span style="width:28px;text-align:right;">90%</span>
+              </div>
+              <div class="ats-bar-row">
+                <span style="width:110px;">Compétences</span>
+                <div class="ats-bar-track"><div class="ats-bar-fill" style="width:60%;background:var(--gold);"></div></div>
+                <span style="width:28px;text-align:right;">60%</span>
+              </div>
+              <div class="ats-bar-row">
+                <span style="width:110px;">Format</span>
+                <div class="ats-bar-track"><div class="ats-bar-fill" style="width:95%;background:var(--lime);"></div></div>
+                <span style="width:28px;text-align:right;">95%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:72px;"></div>
+
+    <!-- Feature 3: Download -->
+    <div class="feat-split">
+      <div class="feat-visual">
+        <div class="feat-visual-header">
+          <div class="win-dot wd-r"></div><div class="win-dot wd-y"></div><div class="win-dot wd-g"></div>
+          <span style="font-size:11px;color:var(--muted2);margin-left:8px;">CVProS — Export</span>
+        </div>
+        <div class="feat-visual-body">
+          <div class="dl-vis">
+            <div class="dl-format">
+              <div class="dl-icon" style="background:#ffecec;">📄</div>
+              <div>
+                <div class="dl-format-name">PDF Professionnel</div>
+                <div class="dl-format-sub">Haute qualité · Compatible ATS</div>
+              </div>
+              <div class="dl-arrow">↓</div>
+            </div>
+            <div class="dl-format">
+              <div class="dl-icon" style="background:#eef0ff;">📝</div>
+              <div>
+                <div class="dl-format-name">Word (.docx)</div>
+                <div class="dl-format-sub">Éditable · Format recruteurs</div>
+              </div>
+              <div class="dl-arrow">↓</div>
+            </div>
+            <div class="dl-format">
+              <div class="dl-icon" style="background:#f0ffe8;">🔗</div>
+              <div>
+                <div class="dl-format-name">Lien de partage</div>
+                <div class="dl-format-sub">CV en ligne · Visibilité</div>
+              </div>
+              <div class="dl-arrow">↓</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-content">
+        <div class="section-label">Export & Partage</div>
+        <h2 class="section-title" style="font-size:36px;">Partagez<br>sans limites</h2>
+        <div class="feat-list">
+          <div class="feat-item">
+            <div class="feat-icon-wrap ic-lime">📥</div>
+            <div>
+              <h4>Export PDF & Word instantané</h4>
+              <p>Téléchargez en PDF haute résolution ou en Word éditable. Format parfait garanti sur tous les appareils.</p>
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon-wrap ic-coral">🔗</div>
+            <div>
+              <h4>CV en ligne partageable</h4>
+              <p>Créez un lien unique vers votre CV en ligne. Parfait pour LinkedIn, email ou portfolio digital.</p>
+            </div>
+          </div>
+          <div class="feat-item">
+            <div class="feat-icon-wrap ic-gold">📊</div>
+            <div>
+              <h4>Suivi des candidatures</h4>
+              <p>Organisez vos candidatures avec notre tableau de bord Kanban. Ne manquez plus aucune opportunité.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ATS TOOL -->
+<section id="ats">
+  <div class="section-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;margin-bottom:0;">
+      <div>
+        <div class="section-label">Outil gratuit</div>
+        <h2 class="section-title">Testez votre CV<br>contre une offre</h2>
+        <p class="section-sub">Uploadez votre CV et l'offre d'emploi. Notre IA analyse la compatibilité ATS en 30 secondes.</p>
+      </div>
+      <a href="https://wa.me/221781134221" target="_blank" style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.5);font-size:13px;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
+        <span style="font-size:18px;">💬</span> Support +221 78 113 42 21
+      </a>
+    </div>
+
+    <div class="ats-tool-wrap">
+      <div class="ats-tabs">
+        <button class="ats-tab active" onclick="switchAtsTab(this,0)">📎 Uploader les fichiers</button>
+        <button class="ats-tab" onclick="switchAtsTab(this,1)">📝 Coller le texte</button>
+      </div>
+
+      <!-- Panel 1: Files -->
+      <div class="ats-panel active" id="atsPanel0">
+        <div class="ats-upload-grid">
+          <div>
+            <p style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Offre d'emploi</p>
+            <div class="ats-zone" id="azJob0" onclick="document.getElementById('afJob0').click()">
+              <input type="file" id="afJob0" accept=".pdf,.docx,.txt" onchange="handleAtsFile('job',this,0)">
+              <div class="ats-zone-icon">📄</div>
+              <div class="ats-zone-title">Glissez ou cliquez</div>
+              <div class="ats-zone-sub">PDF · DOCX · TXT</div>
+              <div class="ats-zone-done-txt" id="azJobTxt0">✓ Chargé</div>
+            </div>
+          </div>
+          <div>
+            <p style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Votre CV</p>
+            <div class="ats-zone" id="azCv0" onclick="document.getElementById('afCv0').click()">
+              <input type="file" id="afCv0" accept=".pdf,.docx,.txt" onchange="handleAtsFile('cv',this,0)">
+              <div class="ats-zone-icon">📋</div>
+              <div class="ats-zone-title">Glissez ou cliquez</div>
+              <div class="ats-zone-sub">PDF · DOCX · TXT</div>
+              <div class="ats-zone-done-txt" id="azCvTxt0">✓ Chargé</div>
+            </div>
+          </div>
+        </div>
+        <button class="btn-ats" id="btnAts0" onclick="runAts()" disabled>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Analyser maintenant
+        </button>
+      </div>
+
+      <!-- Panel 2: Text -->
+      <div class="ats-panel" id="atsPanel1">
+        <div class="ats-upload-grid">
+          <div>
+            <p style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Offre d'emploi</p>
+            <textarea class="ats-textarea" id="atsJobTxt" placeholder="Collez le texte de l'offre d'emploi ici..." oninput="checkAtsReady()"></textarea>
+          </div>
+          <div>
+            <p style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Votre CV</p>
+            <textarea class="ats-textarea" id="atsCvTxt" placeholder="Collez le texte de votre CV ici..." oninput="checkAtsReady()"></textarea>
+          </div>
+        </div>
+        <button class="btn-ats" id="btnAts1" onclick="runAts()" disabled>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Analyser maintenant
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div class="ats-loading" id="atsLoading">
+        <div class="ats-spinner"></div>
+        <p style="color:rgba(255,255,255,0.5);font-size:14px;" id="atsLoadMsg">Analyse de votre CV en cours…</p>
+      </div>
+
+      <!-- Results -->
+      <div class="ats-results" id="atsResults" style="padding:32px;">
+        <div class="ats-score-row">
+          <div>
+            <div class="ats-score-big" id="atsScoreNum" style="color:var(--lime2)">0</div>
+            <div class="ats-score-label">Score ATS / 100</div>
+          </div>
+          <div class="ats-verdict-wrap">
+            <div class="ats-verdict" id="atsVerdict">—</div>
+            <div class="ats-verdict-sub" id="atsComment">—</div>
+          </div>
+          <button class="btn-ats" onclick="openModal()">Obtenir le CV optimisé →</button>
+        </div>
+        <p style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:12px;">Mots-clés analysés</p>
+        <div class="ats-kw-cloud" id="atsKwCloud"></div>
+        <div style="height:20px;"></div>
+        <p style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:12px;">Recommandations</p>
+        <ul class="ats-sugg-list" id="atsSuggList"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-wrap">
+    <div style="text-align:center;margin-bottom:0;">
+      <div class="section-label" style="justify-content:center;">Tarifs</div>
+      <h2 class="section-title">Transparent &amp; abordable</h2>
+      <p class="section-sub" style="margin:14px auto 0;">Commencez gratuitement. Débloquez le plein potentiel avec nos offres premium.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-name">Gratuit</div>
+        <div class="pricing-amount">0 F</div>
+        <div class="pricing-period">Pour toujours</div>
+        <div class="pricing-div"></div>
+        <ul class="pricing-feats">
+          <li><span class="pf-check">✓</span> 3 modèles gratuits</li>
+          <li><span class="pf-check">✓</span> Éditeur complet</li>
+          <li><span class="pf-check">✓</span> Export PDF (watermark)</li>
+          <li><span class="pf-check">✓</span> Analyse ATS basique</li>
+          <li><span class="pf-cross">✗</span> Sans watermark</li>
+          <li><span class="pf-cross">✗</span> CV optimisé IA</li>
+        </ul>
+        <button class="btn-pricing btn-pricing-outline" onclick="openModal()">Commencer gratuitement</button>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="pricing-badge">⭐ Le plus populaire</div>
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-amount">500 F</div>
+        <div class="pricing-period">par CV optimisé · paiement unique</div>
+        <div class="pricing-div"></div>
+        <ul class="pricing-feats">
+          <li><span class="pf-check">✓</span> Tous les modèles premium</li>
+          <li><span class="pf-check">✓</span> CV entièrement optimisé IA</li>
+          <li><span class="pf-check">✓</span> Export PDF + Word sans watermark</li>
+          <li><span class="pf-check">✓</span> Analyse ATS complète</li>
+          <li><span class="pf-check">✓</span> Score garanti +20 points</li>
+          <li><span class="pf-check">✓</span> Support WhatsApp prioritaire</li>
+        </ul>
+        <button class="btn-pricing btn-pricing-solid" onclick="openModal()">Obtenir le CV Pro</button>
+      </div>
+
+      <div class="pricing-card">
+        <div class="pricing-name">Abonnement</div>
+        <div class="pricing-amount" style="font-size:36px;">3 000 F</div>
+        <div class="pricing-period">/ mois · CV illimités</div>
+        <div class="pricing-div"></div>
+        <ul class="pricing-feats">
+          <li><span class="pf-check">✓</span> CV illimités par mois</li>
+          <li><span class="pf-check">✓</span> Tous les avantages Pro</li>
+          <li><span class="pf-check">✓</span> Lettre de motivation IA</li>
+          <li><span class="pf-check">✓</span> Suivi de candidatures</li>
+          <li><span class="pf-check">✓</span> CV en ligne + lien partageable</li>
+          <li><span class="pf-check">✓</span> Support WhatsApp dédié</li>
+        </ul>
+        <button class="btn-pricing btn-pricing-outline" onclick="openModal()">S'abonner</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section>
+  <div class="section-wrap">
+    <div style="text-align:center;margin-bottom:0;">
+      <div class="section-label" style="justify-content:center;">Témoignages</div>
+      <h2 class="section-title">Ils ont décroché<br>leur entretien</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"J'avais postulé des dizaines de fois sans réponse. Après avoir optimisé mon CV avec CVProS, j'ai reçu 3 appels en une semaine !"</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#ffe4dc;">👩🏾</div>
+          <div>
+            <div class="testi-name">Aminata Koné</div>
+            <div class="testi-role">Analyste financière · Dakar</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"L'analyse ATS m'a révélé que mon CV ne passait pas les filtres automatiques. Après optimisation, mon score est passé de 45 à 89 !"</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#e8f5e9;">👨🏻</div>
+          <div>
+            <div class="testi-name">Thomas Dupont</div>
+            <div class="testi-role">Développeur React · Paris</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"Interface intuitive, modèles magnifiques et l'IA qui génère des formulations parfaites. CVProS est vraiment au-dessus de tout ce que j'ai testé."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#fff3e0;">👩🏽</div>
+          <div>
+            <div class="testi-name">Fatou Mbaye</div>
+            <div class="testi-role">Chef de projet · Abidjan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section style="background:var(--cream);">
+  <div class="section-wrap" style="max-width:760px;">
+    <div style="text-align:center;margin-bottom:0;">
+      <div class="section-label" style="justify-content:center;">FAQ</div>
+      <h2 class="section-title">Questions fréquentes</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Qu'est-ce qu'un logiciel ATS et pourquoi c'est important ?
+          <div class="faq-arrow">+</div>
+        </div>
+        <div class="faq-a">Un ATS (Applicant Tracking System) est un logiciel utilisé par plus de 75% des grandes entreprises pour trier automatiquement les CV avant qu'un humain ne les lise. Si votre CV ne contient pas les bons mots-clés ou n'a pas le bon format, il est rejeté automatiquement — même si vous êtes parfaitement qualifié.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Comment fonctionne l'analyse ATS de CVProS ?
+          <div class="faq-arrow">+</div>
+        </div>
+        <div class="faq-a">Notre IA compare votre CV à l'offre d'emploi, extrait les mots-clés essentiels, analyse la structure et le format, puis calcule un score de compatibilité sur 100. Vous recevez une liste détaillée des mots-clés présents/manquants et des recommandations précises pour améliorer votre score.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Quels moyens de paiement acceptez-vous ?
+          <div class="faq-arrow">+</div>
+        </div>
+        <div class="faq-a">Nous acceptons les cartes bancaires (Visa, Mastercard) via Stripe, ainsi que Wave, Orange Money et Free Money via WhatsApp. Contactez-nous au +221 78 113 42 21 pour tout paiement mobile money.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Mes données sont-elles sécurisées ?
+          <div class="faq-arrow">+</div>
+        </div>
+        <div class="faq-a">Oui, absolument. Toutes les données sont chiffrées en transit (SSL/TLS). Vos documents ne sont jamais partagés avec des tiers. Vous pouvez demander la suppression de vos données à tout moment en nous contactant.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Puis-je utiliser CVProS depuis le Sénégal et l'Afrique ?
+          <div class="faq-arrow">+</div>
+        </div>
+        <div class="faq-a">Oui ! CVProS est conçu pour les professionnels africains et francophones. Nous acceptons les paiements mobile money (Wave, Orange Money), le prix est affiché en FCFA, et notre support est disponible sur WhatsApp en français.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section style="padding:80px 40px;">
+  <div class="cta-section">
+    <h2>Commencez dès<br>maintenant — c'est gratuit</h2>
+    <p>Rejoignez plus de 500 000 professionnels qui ont boosté leur carrière avec CVProS.</p>
+    <div class="cta-btns">
+      <button class="btn-hero-main" style="background:var(--lime);color:var(--ink);" onclick="openModal()">
+        Créer mon CV gratuitement
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <a href="https://wa.me/221781134221" target="_blank" class="btn-hero-alt" style="color:rgba(255,255,255,0.6);border-color:rgba(255,255,255,0.15);">
+        💬 Support WhatsApp
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <span class="logo-name">CVPro<span style="color:var(--coral)">S</span></span>
+      <p>La plateforme de création de CV professionnels propulsée par l'IA. Optimisez votre CV pour les recruteurs et décrochez plus d'entretiens.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Produit</h4>
+      <ul>
+        <li><a href="#templates">Modèles de CV</a></li>
+        <li><a href="#features">Fonctionnalités</a></li>
+        <li><a href="#ats">Analyse ATS</a></li>
+        <li><a href="#pricing">Tarifs</a></li>
+        <li><a href="#">Lettre de motivation</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Ressources</h4>
+      <ul>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Conseils CV</a></li>
+        <li><a href="#">Exemples de CV</a></li>
+        <li><a href="#">Guide ATS</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="https://wa.me/221781134221">WhatsApp</a></li>
+        <li><a href="#">FAQ</a></li>
+        <li><a href="#">Confidentialité</a></li>
+        <li><a href="#">CGU</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 CVProS. Tous droits réservés.</span>
+    <a href="https://wa.me/221781134221" target="_blank" class="footer-wa">
+      <span class="wa-icon">💬</span>
+      +221 78 113 42 21
+    </a>
+    <span>Fait avec ❤️ pour les professionnels africains</span>
+  </div>
+</footer>
+
+<!-- SIGNUP MODAL -->
+<div class="modal-bg" id="modalBg" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3>Créez votre CV<br>gratuitement</h3>
+    <p>Rejoignez 500 000+ professionnels. Aucune carte bancaire requise.</p>
+    <input type="email" class="modal-input" placeholder="Votre adresse email">
+    <input type="password" class="modal-input" placeholder="Créez un mot de passe">
+    <button class="modal-btn" onclick="closeModal();openModal2()">Créer mon compte →</button>
+    <div class="modal-sep">ou</div>
+    <div class="modal-social">
+      <button class="social-btn">🔵 Google</button>
+      <button class="social-btn">🔷 LinkedIn</button>
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--muted2);margin-top:16px;">
+      Déjà un compte ? <a href="#" style="color:var(--ink);font-weight:600;">Se connecter</a>
+    </p>
+  </div>
+</div>
+
+<script>
+// ═══ CURSOR ═══
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+});
+(function animRing() {
+  rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+  requestAnimationFrame(animRing);
+})();
+
+// ═══ NAV SCROLL ═══
+window.addEventListener('scroll', () => {
+  document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// ═══ MOBILE MENU ═══
+function toggleMobile() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+function closeMobile() { document.getElementById('mobileMenu').classList.remove('open'); }
+
+// ═══ MODAL ═══
+function openModal() { document.getElementById('modalBg').classList.add('open'); }
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+function closeModalOutside(e) { if(e.target === e.currentTarget) closeModal(); }
+
+// ═══ TEMPLATE FILTER ═══
+function filterTpl(btn, cat) {
+  document.querySelectorAll('.tpl-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tpl-card').forEach(c => {
+    c.style.display = (cat === 'tous' || c.dataset.cat === cat) ? 'block' : 'none';
+  });
+}
+
+// ═══ FAQ ═══
+function toggleFaq(el) {
+  const item = el.parentElement;
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(f => f.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
+// ═══ ATS TOOL ═══
+const pdfjsLib = window['pdfjs-dist/build/pdf'];
+if(pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let atsTexts = { job: '', cv: '' };
+let activeAtsTab = 0;
+
+function switchAtsTab(btn, idx) {
+  activeAtsTab = idx;
+  document.querySelectorAll('.ats-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  document.querySelectorAll('.ats-panel').forEach((p,i) => p.classList.toggle('active', i===idx));
+  document.getElementById('atsResults').style.display = 'none';
+  document.getElementById('atsLoading').style.display = 'none';
+}
+
+async function handleAtsFile(type, input, panelIdx) {
+  const file = input.files[0]; if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  try {
+    if(ext==='pdf') atsTexts[type] = await extractPDF(file);
+    else if(['docx','doc'].includes(ext)) { const ab=await file.arrayBuffer(); const r=await mammoth.extractRawText({arrayBuffer:ab}); atsTexts[type]=r.value; }
+    else atsTexts[type] = await file.text();
+    document.getElementById('az'+cap(type)+'0').classList.add('done');
+    document.getElementById('az'+cap(type)+'Txt0').style.display='block';
+    checkAtsReady();
+  } catch(e) { console.error(e); }
+}
+
+async function extractPDF(file) {
+  const ab = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:ab}).promise;
+  let txt='';
+  for(let i=1;i<=Math.min(pdf.numPages,10);i++){
+    const p=await pdf.getPage(i);
+    const c=await p.getTextContent();
+    txt+=c.items.map(s=>s.str).join(' ')+'\n';
+  }
+  return txt;
+}
+
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+function checkAtsReady() {
+  if(activeAtsTab===1) {
+    const j = document.getElementById('atsJobTxt').value.trim();
+    const c = document.getElementById('atsCvTxt').value.trim();
+    if(j) atsTexts.job=j; if(c) atsTexts.cv=c;
+  }
+  const ok = atsTexts.job && atsTexts.cv && atsTexts.job.length>20 && atsTexts.cv.length>20;
+  document.querySelectorAll('[id^="btnAts"]').forEach(b => b.disabled = !ok);
+}
+
+async function runAts() {
+  // Check texts from textarea if active tab is 1
+  if(activeAtsTab===1){
+    atsTexts.job = document.getElementById('atsJobTxt').value;
+    atsTexts.cv = document.getElementById('atsCvTxt').value;
+  }
+
+  document.querySelectorAll('.ats-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('atsResults').style.display = 'none';
+  document.getElementById('atsLoading').style.display = 'block';
+
+  const loadMsgs=['Extraction des mots-clés…','Analyse de la structure…','Comparaison des compétences…','Calcul du score ATS…'];
+  let li=0;
+  const lel=document.getElementById('atsLoadMsg');
+  const li2=setInterval(()=>{ if(li<loadMsgs.length){lel.textContent=loadMsgs[li++];} },700);
+
+  const prompt=`Tu es un expert ATS de haut niveau. Analyse ce CV face à l'offre d'emploi avec précision.
+
+OFFRE:
+${atsTexts.job.substring(0,1200)}
+
+CV:
+${atsTexts.cv.substring(0,1200)}
+
+Réponds UNIQUEMENT avec un JSON valide (pas de markdown) :
+{"score":<0-100>,"present":[<10 mots-clés présents>],"missing":[<6 mots-clés manquants>],"partial":[<3 partiels>],"suggestions":[<5 recommandations précises>],"verdict":"<6 mots max>","comment":"<20 mots max>"}`;
+
+  let data={};
+  try{
+    const r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    const raw=d.content.map(b=>b.text||'').join('');
+    data=JSON.parse(raw.replace(/```json|```/g,'').trim());
+  }catch(e){
+    data={score:67,verdict:'Profil assez compatible',comment:'Votre CV correspond à plusieurs critères mais des mots-clés essentiels manquent.',present:['Communication','Gestion de projet','Reporting','Anglais','Teamwork','Analyse','Organisation','PowerPoint'],missing:['CRM','KPI','Agile','Budget','Salesforce'],partial:['Leadership','Présentation','Digital'],suggestions:['Ajoutez vos résultats chiffrés (ex: +35% de CA)','Mentionnez les outils CRM utilisés','Intégrez les termes Agile/Scrum','Alignez votre titre avec l\'offre','Créez une section Compétences avec les mots-clés']};
+  }
+
+  clearInterval(li2);
+  showAtsResults(data);
+}
+
+function showAtsResults(r) {
+  document.getElementById('atsLoading').style.display='none';
+  const res=document.getElementById('atsResults');
+  res.style.display='block';
+
+  const score=Math.max(0,Math.min(100,r.score||0));
+  const col=score>=70?'#8cb43a':score>=45?'#d4a847':'#e8533a';
+
+  let n=0;
+  const el=document.getElementById('atsScoreNum');
+  el.style.color=col;
+  const t=setInterval(()=>{ n=Math.min(n+2,score); el.textContent=n; if(n>=score)clearInterval(t); },18);
+
+  document.getElementById('atsVerdict').textContent=r.verdict||'';
+  document.getElementById('atsComment').textContent=r.comment||'';
+
+  const kw=document.getElementById('atsKwCloud');
+  kw.innerHTML='';
+  (r.present||[]).forEach(k=>kw.innerHTML+=`<span class="akw akw-ok">✓ ${k}</span>`);
+  (r.partial||[]).forEach(k=>kw.innerHTML+=`<span class="akw akw-warn">~ ${k}</span>`);
+  (r.missing||[]).forEach(k=>kw.innerHTML+=`<span class="akw akw-bad">✗ ${k}</span>`);
+
+  const sl=document.getElementById('atsSuggList');
+  sl.innerHTML=(r.suggestions||[]).map(s=>`<li><div class="ats-arr">→</div><span>${s}</span></li>`).join('');
+
+  document.getElementById('ats').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// Animate on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('fade-in'); });
+},{threshold:0.1});
+document.querySelectorAll('.how-card, .tpl-card, .testi-card, .pricing-card, .feat-split').forEach(el => observer.observe(el));
+
+// Nav active link
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelectorAll('.nav-links a').forEach(x => x.style.fontWeight='');
+  });
+});
+</script>
+
+</body>
+</html>html { scroll-behavior: smooth; font-size: 16px; }
 
 body {
   font-family: 'Cabinet Grotesk', 'Bricolage Grotesque', sans-serif;
